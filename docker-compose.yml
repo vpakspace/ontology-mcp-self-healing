@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # MCP Server
+  mcp-server:
+    build: .
+    container_name: ontology-mcp-server
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ontologies:/app/ontologies
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./test_database.db:/app/test_database.db
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL}
+    env_file:
+      - .env
+    command: python -m src.mcp_server.server
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Schema Monitor
+  schema-monitor:
+    build: .
+    container_name: ontology-schema-monitor
+    volumes:
+      - ./ontologies:/app/ontologies
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./test_database.db:/app/test_database.db
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL}
+    env_file:
+      - .env
+    command: python -m src.monitoring.schema_monitor
+    restart: unless-stopped
+    depends_on:
+      - mcp-server
+
+  # Self-Healing System
+  self-healing:
+    build: .
+    container_name: ontology-self-healing
+    volumes:
+      - ./ontologies:/app/ontologies
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - ./test_database.db:/app/test_database.db
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ALERT_WEBHOOK_URL=${ALERT_WEBHOOK_URL}
+    env_file:
+      - .env
+    command: python -m src.system.self_healing
+    restart: unless-stopped
+    depends_on:
+      - mcp-server
+      - schema-monitor
+
+  # PostgreSQL (optional)
+  postgres:
+    image: postgres:15-alpine
+    container_name: ontology-postgres
+    environment:
+      - POSTGRES_DB=ontology_db
+      - POSTGRES_USER=ontology_user
+      - POSTGRES_PASSWORD=ontology_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    profiles:
+      - postgres  # Only start with --profile postgres
+
+volumes:
+  postgres_data:

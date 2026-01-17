@@ -1,0 +1,65 @@
+# Self-Healing Ontology MCP Agent System Configuration
+
+# Database Configuration
+database:
+  type: sqlite  # sqlite, postgresql, mysql
+  connection_string: sqlite:///./test_database.db
+  pool_size: 10
+  max_overflow: 20
+
+# Ontology Configuration
+ontology:
+  main_file: ontologies/business_domain.owl
+  examples_dir: ontologies/examples/
+  auto_reload: true
+
+# MCP Server Configuration
+mcp_server:
+  host: localhost
+  port: 8000
+  enable_caching: true
+  cache_ttl: 300  # seconds
+  query_timeout: 30  # seconds
+
+# Schema Monitoring Configuration
+monitoring:
+  enabled: true
+  check_interval: 60  # seconds
+  hash_algorithm: sha256
+  detect_renames: true
+  alert_on_change: true
+
+# Auto-Healing Configuration
+healing:
+  enabled: true
+  auto_approve: false  # Set to true for automatic healing
+  claude_model: claude-3-5-sonnet-20241022
+  temperature: 0.3
+  max_retries: 3
+  validation_enabled: true
+
+# Anthropic API Configuration
+anthropic:
+  api_key: ${ANTHROPIC_API_KEY}  # Set via environment variable
+  max_tokens: 4096
+  timeout: 60  # seconds
+
+# Alert Configuration
+alerts:
+  enabled: true
+  webhook_url: ${ALERT_WEBHOOK_URL}  # Optional: Slack/Teams webhook
+  slack_channel: "#alerts"
+  teams_channel: ""
+  
+# Logging Configuration
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: json  # json or text
+  file: logs/system.log
+  audit_log: logs/audit.json
+
+# Agent Configuration
+agents:
+  max_concurrent: 10
+  timeout: 300  # seconds
+  retry_attempts: 3
