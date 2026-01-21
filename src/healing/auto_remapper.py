@@ -109,7 +109,7 @@ class OntologyRemapper:
             
             # Validate triples
             if self.validation_enabled:
-                is_valid, error = self.validator.validate_triples(triples_text)
+                is_valid, error, _ = self.validator.validate_triples(triples_text)
                 
                 if not is_valid:
                     logger.error("Invalid triples generated", error=error)
@@ -231,9 +231,11 @@ Generate the updated ontology triples:"""
     
     def _extract_triples_from_response(self, response: Any) -> str:
         """Extract Turtle triples from Claude API response."""
+        import re
+
         # Extract text from response
         content = response.content
-        
+
         if isinstance(content, list):
             text = ""
             for block in content:
@@ -241,11 +243,32 @@ Generate the updated ontology triples:"""
                     text += block.text
                 elif isinstance(block, dict) and "text" in block:
                     text += block["text"]
-            return text
         elif isinstance(content, str):
-            return content
+            text = content
         else:
-            return str(content)
+            text = str(content)
+
+        # Strip markdown code blocks (```turtle, ```rdf, ``` etc.)
+        # Pattern matches ```language\n...content...\n```
+        code_block_pattern = r'```(?:turtle|rdf|ttl|n3)?\s*\n?(.*?)\n?```'
+        matches = re.findall(code_block_pattern, text, re.DOTALL | re.IGNORECASE)
+
+        if matches:
+            # Return the content from code blocks (joined if multiple)
+            extracted = '\n'.join(matches)
+            logger.debug("Extracted triples from markdown code blocks", length=len(extracted))
+            text = extracted.strip()
+        else:
+            text = text.strip()
+
+        # Add default prefix if triples use ":" prefix without declaration
+        if text and ':' in text and not '@prefix' in text.lower() and not 'prefix :' in text.lower():
+            # Add a default prefix for the ontology namespace
+            default_prefix = '@prefix : <http://example.org/ontology#> .\n\n'
+            text = default_prefix + text
+            logger.debug("Added default prefix to triples")
+
+        return text
     
     async def _apply_ontology_updates(
         self,

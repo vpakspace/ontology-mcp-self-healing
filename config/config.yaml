@@ -33,7 +33,7 @@ monitoring:
 healing:
   enabled: true
   auto_approve: false  # Set to true for automatic healing
-  claude_model: claude-3-5-sonnet-20241022
+  claude_model: claude-sonnet-4-20250514
   temperature: 0.3
   max_retries: 3
   validation_enabled: true
@@ -63,3 +63,19 @@ agents:
   max_concurrent: 10
   timeout: 300  # seconds
   retry_attempts: 3
+
+# Manual ontology mappings (fallback when OWL annotations don't load)
+ontology_mappings:
+  classes:
+    Customer: customers
+    Order: orders
+  columns:
+    Customer:
+      customerId: id
+      email: email
+      signupDate: signup_date
+    Order:
+      orderId: id
+      orderDate: order_date
+      totalAmount: total_amount
+      customerId: customer_id

@@ -87,19 +87,23 @@ class OntologyMCPServer:
         """Connect to database using SQLAlchemy."""
         db_config = self.config.get("database", {})
         connection_string = db_config.get("connection_string", "sqlite:///./test_database.db")
-        
-        # Create engine with connection pooling
-        pool_size = db_config.get("pool_size", 10)
-        max_overflow = db_config.get("max_overflow", 20)
-        
-        self.db_engine = create_engine(
-            connection_string,
-            poolclass=QueuePool,
-            pool_size=pool_size,
-            pool_max_overflow=max_overflow,
-            echo=False
-        )
-        
+
+        # Create engine - use simpler config for SQLite
+        if connection_string.startswith("sqlite"):
+            self.db_engine = create_engine(connection_string, echo=False)
+        else:
+            # Create engine with connection pooling for other databases
+            pool_size = db_config.get("pool_size", 10)
+            max_overflow = db_config.get("max_overflow", 20)
+
+            self.db_engine = create_engine(
+                connection_string,
+                poolclass=QueuePool,
+                pool_size=pool_size,
+                pool_pre_ping=True,
+                echo=False
+            )
+
         logger.info("Database connected", connection_string=connection_string)
     
     def _generate_tools(self) -> None:

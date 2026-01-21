@@ -62,42 +62,38 @@
         <rdfs:label>Has Order</rdfs:label>
     </owl:ObjectProperty>
     
-    <!-- Table Mappings (using annotation properties) -->
-    <owl:AnnotationProperty rdf:about="#mapsToTable"/>
-    <owl:AnnotationProperty rdf:about="#mapsToColumn"/>
-    <owl:AnnotationProperty rdf:about="#equivalentProperty"/>
-    
+    <!-- Table Mappings -->
     <owl:Class rdf:about="#Customer">
-        <mapsToTable rdf:datatype="http://www.w3.org/2001/XMLSchema#string">customers</mapsToTable>
+        <mapsToTable>customers</mapsToTable>
     </owl:Class>
     
     <owl:Class rdf:about="#Order">
-        <mapsToTable rdf:datatype="http://www.w3.org/2001/XMLSchema#string">orders</mapsToTable>
+        <mapsToTable>orders</mapsToTable>
     </owl:Class>
     
     <!-- Column Mappings -->
     <owl:DatatypeProperty rdf:about="#customerId">
-        <mapsToColumn rdf:datatype="http://www.w3.org/2001/XMLSchema#string">id</mapsToColumn>
+        <mapsToColumn>id</mapsToColumn>
     </owl:DatatypeProperty>
     
     <owl:DatatypeProperty rdf:about="#email">
-        <mapsToColumn rdf:datatype="http://www.w3.org/2001/XMLSchema#string">email</mapsToColumn>
+        <mapsToColumn>email</mapsToColumn>
     </owl:DatatypeProperty>
     
     <owl:DatatypeProperty rdf:about="#signupDate">
-        <mapsToColumn rdf:datatype="http://www.w3.org/2001/XMLSchema#string">signup_date</mapsToColumn>
+        <mapsToColumn>signup_date</mapsToColumn>
     </owl:DatatypeProperty>
     
     <owl:DatatypeProperty rdf:about="#orderId">
-        <mapsToColumn rdf:datatype="http://www.w3.org/2001/XMLSchema#string">id</mapsToColumn>
+        <mapsToColumn>id</mapsToColumn>
     </owl:DatatypeProperty>
     
     <owl:DatatypeProperty rdf:about="#orderDate">
-        <mapsToColumn rdf:datatype="http://www.w3.org/2001/XMLSchema#string">order_date</mapsToColumn>
+        <mapsToColumn>order_date</mapsToColumn>
     </owl:DatatypeProperty>
     
     <owl:DatatypeProperty rdf:about="#totalAmount">
-        <mapsToColumn rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_amount</mapsToColumn>
+        <mapsToColumn>total_amount</mapsToColumn>
     </owl:DatatypeProperty>
     
 </rdf:RDF>

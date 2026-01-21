@@ -38,15 +38,15 @@ def _create_tool_from_class(
     cls: ThingClass, db_engine: Any, config: Dict[str, Any]
 ) -> Optional[Dict[str, Any]]:
     """Create an MCP tool definition from an ontology class."""
-    
-    # Get table mapping from ontology annotations
-    table_name = _get_table_mapping(cls)
+
+    # Get table mapping from ontology annotations or config fallback
+    table_name = _get_table_mapping(cls, config)
     if not table_name:
         logger.warning("Class has no table mapping", class_name=cls.name)
         return None
-    
+
     # Get column mappings
-    column_mappings = _get_column_mappings(cls)
+    column_mappings = _get_column_mappings(cls, config)
     
     tool_name = f"query_{cls.name.lower()}"
     description = f"Query {cls.name} entities from the database using semantic queries"
@@ -88,43 +88,64 @@ def _create_tool_from_class(
     return tool_schema
 
 
-def _get_table_mapping(cls: ThingClass) -> Optional[str]:
-    """Extract table name from ontology annotations."""
+def _get_table_mapping(cls: ThingClass, config: Dict[str, Any] = None) -> Optional[str]:
+    """Extract table name from ontology annotations or config fallback."""
+    # Try ontology annotation first
     if hasattr(cls, "mapsToTable"):
-        return str(cls.mapsToTable)
-    
-    # Try alternative annotation formats
-    for prop in cls.get_properties():
-        if prop.name == "mapsToTable":
-            return str(prop)
-    
+        mapping = cls.mapsToTable
+        if mapping:
+            return str(mapping[0]) if isinstance(mapping, list) else str(mapping)
+
+    # Fallback to config mappings
+    if config:
+        ontology_mappings = config.get("ontology_mappings", {})
+        class_mappings = ontology_mappings.get("classes", {})
+        if cls.name in class_mappings:
+            return class_mappings[cls.name]
+
     return None
 
 
-def _get_column_mappings(cls: ThingClass) -> Dict[str, str]:
-    """Extract column mappings from class properties."""
+def _get_column_mappings(cls: ThingClass, config: Dict[str, Any] = None) -> Dict[str, str]:
+    """Extract column mappings from class properties or config fallback."""
     mappings = {}
-    
-    for prop in cls.get_properties():
-        if isinstance(prop, DataPropertyClass):
+
+    # Fallback to config mappings first (more reliable)
+    if config:
+        ontology_mappings = config.get("ontology_mappings", {})
+        column_mappings = ontology_mappings.get("columns", {})
+        if cls.name in column_mappings:
+            return column_mappings[cls.name]
+
+    # Try ontology (may not work with all OWL formats)
+    ontology = cls.namespace.ontology if hasattr(cls, 'namespace') else None
+    if not ontology:
+        return mappings
+
+    for prop in ontology.data_properties():
+        if hasattr(prop, 'domain') and cls in prop.domain:
             column_name = _get_column_mapping(prop)
             if column_name:
                 mappings[prop.name] = column_name
-    
+
     return mappings
 
 
 def _get_column_mapping(prop: Any) -> Optional[str]:
     """Extract column name from property annotations."""
     if hasattr(prop, "mapsToColumn"):
-        return str(prop.mapsToColumn)
-    
+        mapping = prop.mapsToColumn
+        if mapping:
+            return str(mapping[0]) if isinstance(mapping, list) else str(mapping)
+
     # Check for equivalent property (for renamed columns)
     if hasattr(prop, "equivalentProperty"):
         equiv = prop.equivalentProperty
         if hasattr(equiv, "mapsToColumn"):
-            return str(equiv.mapsToColumn)
-    
+            mapping = equiv.mapsToColumn
+            if mapping:
+                return str(mapping[0]) if isinstance(mapping, list) else str(mapping)
+
     return None
 
 
